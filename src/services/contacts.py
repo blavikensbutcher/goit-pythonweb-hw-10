@@ -83,7 +83,7 @@ class ContactsService:
         return False
     
     @staticmethod
-    async def update_contact(db: AsyncSession, contact_id: str, contact_data: UpdateContactDto, user_id: str):
+    async def update_contact(db: AsyncSession, contact_id: str, contact_data: UpdateContactDto, user_id: UUID):
         result = await db.execute(
             select(ContactModel)
             .where(ContactModel.id == contact_id, ContactModel.user_id == user_id)
