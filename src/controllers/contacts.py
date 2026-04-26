@@ -1,5 +1,10 @@
 
 
+from types.contract import UpdateContactDto
+from types.contract import ContactDto
+from types.contract import ContactDtoResponse
+from fastapi import Query
+from typing import Optional
 from typing import  List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,7 +15,7 @@ from src.services.contacts import get_contacts_service
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.services.users import get_current_user_from_token
-from src.types.contract import ContactDto, ContactDtoResponse, UpdateContactDto
+
 
 
 router = APIRouter(
@@ -22,9 +27,23 @@ router = APIRouter(
 
 contactsService = get_contacts_service()
 
-@router.get("",  response_model=List[ContactDtoResponse])
-async def get_contacts(db: AsyncSession = Depends(get_db),  user: UserModel = Depends(get_current_user_from_token)):
-    return await contactsService.get_contacts(db)
+@router.get("", response_model=List[ContactDtoResponse])
+async def get_contacts(
+    name: Optional[str] = Query(default=None, description="Filter by first name"),
+    surname: Optional[str] = Query(default=None, description="Filter by surname"),
+    email: Optional[str] = Query(default=None, description="Filter by email"),
+    db: AsyncSession = Depends(get_db),
+):
+    return await contactsService.get_contacts(
+        db=db,
+        name=name,
+        surname=surname,
+        email=email,
+    )
+    
+@router.get("/birthdays/upcoming", response_model=List[ContactDtoResponse])
+async def get_upcoming_birthdays(db: AsyncSession = Depends(get_db)):
+    return await contactsService.find_contacts_birthday_in_week(db)
     
 @router.post("", response_model=ContactDtoResponse)
 async def create_contact(contact_data: ContactDto, db: AsyncSession = Depends(get_db), user: UserModel = Depends(get_current_user_from_token)):
